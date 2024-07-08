@@ -23,6 +23,8 @@ struct ContentView: View {
     @State var finalValue:String = "Calculator Apps"
     // This holds the expression which has been entered by the user.
     @State var calExpression: [String] = []
+    // Holds number that user insert
+    @State var noBeingEntered: String = ""
     
     var body: some View {
         VStack {
@@ -34,7 +36,7 @@ struct ContentView: View {
                     .foregroundColor(primaryColor)
                 // This text displayes the expression that the user has entered till now
                 Text(flattenTheExpression(exps: calExpression))
-                    .font(Font.custom("HelveticaNeue-Thin", size: 24))
+                    .font(Font.custom("HelveticaNeue-Thin", size: 52))
                     .frame(alignment: Alignment.bottomTrailing)
                     .foregroundColor(primaryColor)
                             
@@ -52,12 +54,38 @@ struct ContentView: View {
                             Spacer()
                             ForEach(row, id: \.self) { column in
                                 Button(action: {
-                                    //Action to be added later.
+                                    if column == "=" {
+                                        self.calExpression = []
+                                        self.noBeingEntered = ""
+                                        return
+                                    } else if checkIfOperator(str: column)  {
+                                        self.calExpression.append(column)
+                                        self.noBeingEntered = ""
+                                    } else {
+                                        self.noBeingEntered.append(column)
+                                        if self.calExpression.count == 0 {
+                                            self.calExpression.append(self.noBeingEntered)
+                                        } else {
+                                            if !checkIfOperator(str: self.calExpression[self.calExpression.count-1]) {
+                                                self.calExpression.remove(at: self.calExpression.count-1)
+                                            }
+
+                                            self.calExpression.append(self.noBeingEntered)
+                                        }
+                                    }
+
+                                    self.finalValue = processExpression(exp: self.calExpression)
+                                    // This code ensures that future operations are done on evaluated result rather than evaluating the expression from scratch.
+                                    if self.calExpression.count > 3 {
+                                        self.calExpression = [self.finalValue, self.calExpression[self.calExpression.count - 1]]
+                                    }
+
                                 }, label: {
-                                    Text(column)
-                                    .font(.system(size: getFontSize(btnTxt: column)))
-                                    .frame(idealWidth: 100, maxWidth: .infinity, idealHeight: 100, maxHeight: .infinity, alignment: .center)
-                                })
+                                  Text(column)
+                                  .font(.system(size: getFontSize(btnTxt: column)))
+                                  .frame(idealWidth: 100, maxWidth: .infinity, idealHeight: 100, maxHeight: .infinity, alignment: .center)
+                                }
+                                )
                                 .foregroundColor(Color.white)
                                 .background(getBackground(str: column))
                                 .mask(CustomShape(radius: 40, value: column))
@@ -70,7 +98,7 @@ struct ContentView: View {
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, idealHeight: 414, maxHeight: .infinity, alignment: .topLeading)
         }
         .background(Color.black)
-        .edgesIgnoringSafeArea(.all)
+//        .edgesIgnoringSafeArea(.all)
     }
 }
 
@@ -82,7 +110,7 @@ func flattenTheExpression(exps: [String]) -> String {
     return calExp
 }
 
-// Return differnt font sizes for operators and numbers.
+// If its operator, then the BG Color is red
 func getBackground(str:String) -> Color {
     
     if checkIfOperator(str: str) {
@@ -110,6 +138,38 @@ func checkIfOperator(str:String) -> Bool {
     
     return false
     
+}
+
+func processExpression(exp:[String]) -> String {
+    
+    if exp.count < 3 {
+        // Less than 3 means that expression doesnt contain the 2nd no.
+        return "0.0"
+    }
+    
+    var a = Double(exp[0])  // Get the first no
+    var c = Double("0.0")   // Init the second no
+    let expSize = exp.count
+    
+    for i in (1...expSize-2) {
+        
+        c = Double(exp[i+1])
+        
+        switch exp[i] {
+        case "+":
+            a! += c!
+        case "−":
+            a! -= c!
+        case "×":
+            a! *= c!
+        case "÷":
+            a! /= c!
+        default:
+            print("skipping the rest")
+        }
+    }
+    
+    return String(format: "%.1f", a!)
 }
 
 #Preview {
