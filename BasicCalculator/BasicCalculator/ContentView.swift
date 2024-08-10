@@ -19,7 +19,7 @@ struct ContentView: View {
         [".", "0", "=", "+"]
     ]
     
-    // ... @Stack variales are defined here
+    //Value shown
     @State var finalValue:String = "Calculator Apps"
     // This holds the expression which has been entered by the user.
     @State var calExpression: [String] = []
